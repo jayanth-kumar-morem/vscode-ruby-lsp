@@ -1,31 +1,15 @@
-name: ruby-lsp
+name: vscode-ruby-lsp
 
-type: ruby
+type: nodejs
 
 up:
-  - ruby: '3.2.1'
-  - bundler:
-      gemfile: Gemfile
+  - node:
+      yarn: true
+      version: 17.5.0
 
 commands:
-  docs:
-    run: bundle exec rake yard
-    subcommands:
-      check:
-        run: bundle exec rake check_docs
-  server: exe/ruby-lsp
-  style: bin/rubocop
-  typecheck:
-    aliases: ["tc"]
-    run: "bundle exec srb tc"
-  ci:
-    run: "bundle exec rake check_docs &&
-      bundle exec rake check_visit_overrides &&
-      bundle exec srb tc &&
-      bin/rubocop &&
-      bin/test"
-  test:
-    syntax:
-      argument: file
-      optional: args...
-    run: bin/test
+  package: "yarn run package"
+  compile: "yarn run compile"
+  lint: "yarn run lint"
+  style: "yarn run format"
+  test: "yarn run test"

@@ -1,9 +1,5 @@
-/**/.bundle/
-/**/.yardoc
-/**/_yardoc/
-/**/coverage/
-/**/doc/
-/**/pkg/
-/**/spec/reports/
-/**/tmp/
-/**/.dev/
+out
+dist
+node_modules
+.vscode-test/
+*.vsix

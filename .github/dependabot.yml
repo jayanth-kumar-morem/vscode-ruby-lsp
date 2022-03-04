@@ -1,11 +1,8 @@
 version: 2
 updates:
-  - package-ecosystem: "bundler"
+  - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "weekly"
     reviewers:
-      - "Shopify/ruby-dev-exp"
-    labels:
-      - "dependencies"
-      - "ruby"
+      - "Shopify/sorbet"

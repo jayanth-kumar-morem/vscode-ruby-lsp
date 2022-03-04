@@ -1,13 +1,11 @@
+// Place your settings in this file to overwrite default and user settings.
 {
-  // Set this value to `verbose` to see the full JSON content of LSP requests and responses
-  "ruby lsp.trace.server": "messages",
-  "[ruby]": {
-    "editor.defaultFormatter": "Shopify.ruby-lsp",
-  },
-  "cSpell.languageSettings": [
-    { "languageId": "*",      "locale": "en",              "dictionaries": ["wordsEn"] },
-    { "languageId": "*",      "locale": "en-US",           "dictionaries": ["wordsEn"] },
-    { "languageId": "*",                                   "dictionaries": ["companies", "softwareTerms", "misc"] },
-    { "languageId": "ruby",                                "dictionaries": ["ruby"]},
-]
+    "files.exclude": {
+        "out": false // set this to true to hide the "out" folder with the compiled JS files
+    },
+    "search.exclude": {
+        "out": true // set this to false to include "out" folder in search results
+    },
+    // Turn off tsc task auto detection since we have the necessary tasks as npm scripts
+    "typescript.tsc.autoDetect": "off"
 }
