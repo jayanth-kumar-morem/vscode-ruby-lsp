@@ -50,9 +50,18 @@ export default class Client {
       },
     };
 
+    const executableDebug: Executable = {
+      command: "bundle",
+      args: ["exec", "rdbg", "--open", "--command", "--", "exe/ruby-lsp"],
+      options: {
+        cwd: this.workingFolder,
+        env,
+      },
+    };
+
     this.serverOptions = {
       run: executable,
-      debug: executable,
+      debug: executableDebug,
     };
 
     this.clientOptions = {
@@ -156,6 +165,9 @@ export default class Client {
     this.context.subscriptions.push(
       vscode.commands.registerCommand("ruby-lsp.start", () => this.start()),
       vscode.commands.registerCommand("ruby-lsp.restart", () => this.restart()),
+      // vscode.commands.registerCommand("ruby-lsp.restartWithDebug", () =>
+      //   this.restartWithDebug()
+      // ),
       vscode.commands.registerCommand("ruby-lsp.stop", () => this.stop())
     );
   }

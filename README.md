@@ -105,6 +105,8 @@ code of conduct.
 
 Interactive debugging works for both running the extension or tests. In the debug panel, select whether to run the extension in development mode or run tests, set up some breakpoints and start with F5.
 
+TODO: update
+
 ## License
 
 This extension is available as open source under the terms of the
