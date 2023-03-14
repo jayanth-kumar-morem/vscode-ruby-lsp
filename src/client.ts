@@ -33,6 +33,7 @@ export default class Client implements ClientInterface {
   private statusItems: StatusItems;
   private outputChannel = vscode.window.createOutputChannel(LSP_NAME);
   private _state: ServerState = ServerState.Starting;
+  private diagnosticsTimer?: NodeJS.Timeout;
 
   constructor(
     context: vscode.ExtensionContext,
@@ -108,6 +109,35 @@ export default class Client implements ClientInterface {
           }
 
           return undefined;
+        },
+        provideDiagnostics: async (document, previousResultId, token, next) => {
+          let doc;
+
+          // Document can be a vscode.Document or a vscode.Uri. If it's an URI, we have to find the document associated
+          // with it
+          if (document instanceof vscode.Uri) {
+            doc = vscode.workspace.textDocuments.find(
+              (doc) => doc.uri === document
+            )!;
+          } else {
+            doc = document;
+          }
+
+          // If the document is not too large, execute diagnostics immediately
+          if (doc.lineCount < 2000) {
+            return next(document, previousResultId, token);
+          }
+
+          // Running RuboCop diagnostics on large files is extremely expensive, so we debounce the request with 750ms to
+          // reduce the number of times we execute it for long typing streaks
+          clearTimeout(this.diagnosticsTimer);
+
+          return new Promise((resolve) => {
+            this.diagnosticsTimer = setTimeout(
+              () => resolve(next(document, previousResultId, token)),
+              750
+            );
+          });
         },
       },
     };
