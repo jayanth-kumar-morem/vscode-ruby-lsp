@@ -20,6 +20,7 @@ export enum Command {
   ToggleYjit = "rubyLsp.toggleYjit",
   SelectVersionManager = "rubyLsp.selectRubyVersionManager",
   ToggleFeatures = "rubyLsp.toggleFeatures",
+  FormatterHelp = "rubyLsp.formatterHelp",
 }
 
 const STOPPED_SERVER_OPTIONS = [
@@ -250,15 +251,15 @@ export class YjitStatus extends StatusItem {
   }
 
   registerCommand(): void {
-    this.context.subscriptions.push(
-      vscode.commands.registerCommand(Command.ToggleYjit, () => {
-        const lspConfig = vscode.workspace.getConfiguration("rubyLsp");
-        const yjitEnabled = lspConfig.get("yjit");
-        lspConfig.update("yjit", !yjitEnabled, true, true);
-        this.item.text = yjitEnabled ? "YJIT disabled" : "YJIT enabled";
-        this.item.command!.title = yjitEnabled ? "Enable" : "Disable";
-      })
-    );
+    // this.context.subscriptions.push(
+    //   vscode.commands.registerCommand(Command.ToggleYjit, () => {
+    //     const lspConfig = vscode.workspace.getConfiguration("rubyLsp");
+    //     const yjitEnabled = lspConfig.get("yjit");
+    //     lspConfig.update("yjit", !yjitEnabled, true, true);
+    //     this.item.text = yjitEnabled ? "YJIT disabled" : "YJIT enabled";
+    //     this.item.command!.title = yjitEnabled ? "Enable" : "Disable";
+    //   })
+    // );
   }
 }
 
@@ -338,6 +339,40 @@ export class FeaturesStatus extends StatusItem {
   }
 }
 
+export class FormatterStatus extends StatusItem {
+  constructor(client: ClientInterface) {
+    super("formatter", client);
+
+    this.item.name = "Formatter";
+    this.refresh();
+  }
+
+  refresh(): void {
+    // const useYjit: boolean | undefined = vscode.workspace
+    //   .getConfiguration("rubyLsp")
+    //   .get("yjit");
+
+    this.item.text = "No formatter found";
+
+    this.item.command = {
+      title: "Help",
+      command: Command.FormatterHelp,
+    };
+  }
+
+  registerCommand(): void {
+    this.context.subscriptions.push(
+      vscode.commands.registerCommand(Command.FormatterHelp, () => {
+        vscode.env.openExternal(
+          vscode.Uri.parse(
+            "https://shopify.github.io/ruby-lsp/RubyLsp/Requests/Formatting.html"
+          )
+        );
+      })
+    );
+  }
+}
+
 export class StatusItems {
   private items: StatusItem[] = [];
 
@@ -348,6 +383,7 @@ export class StatusItems {
       new ExperimentalFeaturesStatus(client),
       new YjitStatus(client),
       new FeaturesStatus(client),
+      new FormatterStatus(client),
     ];
   }
 
