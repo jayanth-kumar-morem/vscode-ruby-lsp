@@ -1,6 +1,8 @@
 ### Motivation
 
-<!-- Explain why you are making this change. Include links to issues or describe the problem being solved, not the solution. -->
+<!-- Closes # -->
+
+<!-- Explain why you are making this change. Describe the problem being solved, not the solution. -->
 
 ### Implementation
 

@@ -10,10 +10,10 @@ body:
         Thank you for proposing a new feature! Please answer the following questions to help us the proposal.
   - type: checkboxes
     attributes:
-      label: I have checked that this feature is not already implemented
-      description: Supported features can be found [here](https://shopify.github.io/ruby-lsp/RubyLsp/Requests.html)
+      label: This feature is VS Code specific
+      description: Non VS Code specific features should be proposed to the [Ruby LSP server](https://github.com/Shopify/ruby-lsp/issues/new)
       options:
-        - label: This feature does not exist
+        - label: VS Code specific
           required: true
   - type: textarea
     attributes:
@@ -29,7 +29,7 @@ body:
       label: Description
       description: Describe the feature you are proposing
       placeholder: >
-        Explain the feature you want to be able to use in editors, not the implementation details.
+        Explain the feature you want to be able to use in VS Code, not the implementation details.
     validations:
       required: true
   - type: textarea

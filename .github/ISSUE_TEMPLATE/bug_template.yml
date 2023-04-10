@@ -1,6 +1,6 @@
 ---
 name: Ruby LSP bug
-description: File a bug report about the Ruby LSP
+description: File a bug report about the VS Code Ruby LSP extension
 labels:
   - bug
 body:
@@ -10,31 +10,46 @@ body:
         Thank you for filing a bug report! Please answer the following questions to help us understand the issue.
   - type: input
     attributes:
+      label: Operating System
+      description: The operating system where this issue occurs
+    validations:
+      required: true
+  - type: input
+    attributes:
       label: Ruby version
       description: The Ruby version being used to run the LSP
     validations:
       required: true
-  - type: textarea
+  - type: checkboxes
     attributes:
-      label: Code snippet
-      description: A code snippet that reproduces the issue
-      placeholder: >
-        If applicable, please include the smallest code snippet that reproduces the issue.
+      label: Project has a bundle
+      description: The project where the Ruby LSP is being used has a Gemfile.lock
+      options:
+        - label: Project has a bundle
+          required: true
+  - type: dropdown
+    attributes:
+      label: Ruby version manager being used
+      description: How Ruby was installed on your system and how you select Ruby versions
+      options:
+        - asdf
+        - chruby
+        - none
+        - rbenv
+        - rvm
+        - shadowenv
+        - other (please specify in description)
+    validations:
+      required: true
   - type: textarea
     attributes:
       label: Description
       description: Reproduction steps and an explanation of the observed behavior
       placeholder: >
-        Before submitting the issue report, please try updating the ruby-lsp gem first. If the bug is related to a
-        feature that involves automatically changing code, such as refactors or formatting, please include an example of
-        the resulting code. You may want to include a screenshot or GIF of the issue.
-    validations:
-      required: true
-  - type: textarea
-    attributes:
-      label: Expected output
-      description: A description of the expected behavior
-      placeholder: >
-        Describe what you expected to happen.
+        Before submitting the issue report, please follow the instructions on
+        [troubleshotting](https://github.com/Shopify/vscode-ruby-lsp#troubleshooting) and make sure you are:
+        1. On the latest version of the Ruby LSP VS Code extension
+        2. On the latest version of the Ruby LSP server gem
+        3. On the latest version of VS Code
     validations:
       required: true
