@@ -365,9 +365,7 @@ export class FormatterStatus extends StatusItem {
     this.context.subscriptions.push(
       vscode.commands.registerCommand(Command.FormatterHelp, () => {
         vscode.env.openExternal(
-          vscode.Uri.parse(
-            "https://shopify.github.io/ruby-lsp/RubyLsp/Requests/Formatting.html"
-          )
+          vscode.Uri.parse("https://github.com/Shopify/ruby-lsp#formatting")
         );
       })
     );
