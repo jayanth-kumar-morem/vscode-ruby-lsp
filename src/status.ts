@@ -252,15 +252,15 @@ export class YjitStatus extends StatusItem {
   }
 
   registerCommand(): void {
-    // this.context.subscriptions.push(
-    //   vscode.commands.registerCommand(Command.ToggleYjit, () => {
-    //     const lspConfig = vscode.workspace.getConfiguration("rubyLsp");
-    //     const yjitEnabled = lspConfig.get("yjit");
-    //     lspConfig.update("yjit", !yjitEnabled, true, true);
-    //     this.item.text = yjitEnabled ? "YJIT disabled" : "YJIT enabled";
-    //     this.item.command!.title = yjitEnabled ? "Enable" : "Disable";
-    //   })
-    // );
+    this.context.subscriptions.push(
+      vscode.commands.registerCommand(Command.ToggleYjit, () => {
+        const lspConfig = vscode.workspace.getConfiguration("rubyLsp");
+        const yjitEnabled = lspConfig.get("yjit");
+        lspConfig.update("yjit", !yjitEnabled, true, true);
+        this.item.text = yjitEnabled ? "YJIT disabled" : "YJIT enabled";
+        this.item.command!.title = yjitEnabled ? "Enable" : "Disable";
+      })
+    );
   }
 }
 
