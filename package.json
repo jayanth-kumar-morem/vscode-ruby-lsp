@@ -2,7 +2,7 @@
   "name": "ruby-lsp",
   "displayName": "Ruby LSP",
   "description": "VS Code plugin for connecting with the Ruby LSP",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "publisher": "Shopify",
   "repository": {
     "type": "git",
@@ -117,6 +117,11 @@
               "description": "Enable completion, which provides suggestions for code completion",
               "type": "boolean",
               "default": true
+            },
+            "codeLens": {
+              "description": "Enable code lens, which generates clickable text above tests to run them in the terminal",
+              "type": "boolean",
+              "default": false
             }
           },
           "default": {
@@ -132,7 +137,8 @@
             "onTypeFormatting": true,
             "selectionRanges": true,
             "semanticHighlighting": true,
-            "completion": true
+            "completion": true,
+            "codeLens": false
           }
         },
         "rubyLsp.rubyVersionManager": {
@@ -164,9 +170,73 @@
             "none"
           ],
           "default": "auto"
+        },
+        "rubyLsp.bundleGemfile": {
+          "description": "Relative path to the Gemfile to use for bundling the Ruby LSP server. Only necessary when using a separate Gemfile for the Ruby LSP",
+          "type": "string",
+          "default": ""
         }
       }
     },
+    "breakpoints": [
+      {
+        "language": "ruby"
+      }
+    ],
+    "debuggers": [
+      {
+        "type": "ruby_lsp",
+        "label": "Ruby LSP debug client",
+        "languages": [
+          "ruby"
+        ],
+        "configurationAttributes": {
+          "launch": {
+            "required": [
+              "program"
+            ],
+            "properties": {
+              "program": {
+                "type": "string",
+                "description": "The program to debug"
+              }
+            }
+          },
+          "attach": {}
+        },
+        "configurationSnippets": [
+          {
+            "label": "Debug a Ruby program",
+            "description": "New configuration for debugging a Ruby program",
+            "body": {
+              "type": "ruby_lsp",
+              "request": "launch",
+              "name": "Debug program",
+              "program": "ruby ${file}"
+            }
+          },
+          {
+            "label": "Debug a Minitest / Test Unit file",
+            "description": "New configuration for debugging a Minitest / Test Unit file",
+            "body": {
+              "type": "ruby_lsp",
+              "request": "launch",
+              "name": "Debug test file",
+              "program": "ruby -Itest ${relativeFile}"
+            }
+          },
+          {
+            "label": "Attach the debugger to a running Ruby process",
+            "description": "New configuration for attaching the debugger to a process that was started with the debugger",
+            "body": {
+              "type": "ruby_lsp",
+              "request": "attach",
+              "name": "Attach to a debuggee"
+            }
+          }
+        ]
+      }
+    ],
     "snippets": [
       {
         "language": "ruby",
@@ -261,23 +331,23 @@
     "ws": ">= 7.4.6"
   },
   "devDependencies": {
-    "@babel/core": "^7.21.3",
-    "@shopify/eslint-plugin": "^42.0.3",
+    "@babel/core": "^7.21.4",
+    "@shopify/eslint-plugin": "^42.1.0",
     "@shopify/prettier-config": "^1.1.2",
     "@types/glob": "^8.0.1",
     "@types/mocha": "^10.0.1",
     "@types/node": "18.x",
     "@types/vscode": "^1.63.0",
-    "@typescript-eslint/eslint-plugin": "^5.57.0",
+    "@typescript-eslint/eslint-plugin": "^5.57.1",
     "@typescript-eslint/parser": "^5.56.0",
     "@vscode/test-electron": "^2.3.0",
-    "esbuild": "^0.17.14",
-    "eslint": "^8.36.0",
-    "eslint-import-resolver-typescript": "^3.5.3",
-    "glob": "^9.3.2",
+    "esbuild": "^0.17.15",
+    "eslint": "^8.37.0",
+    "eslint-import-resolver-typescript": "^3.5.4",
+    "glob": "^9.3.4",
     "mocha": "^10.2.0",
     "prettier": "^2.8.7",
-    "typescript": "^5.0.2",
+    "typescript": "^5.0.3",
     "vsce": "^2.15.0"
   },
   "dependencies": {

@@ -27,10 +27,13 @@ export class Ruby {
   private shell = process.env.SHELL;
   private _env: NodeJS.ProcessEnv = {};
   private _error = false;
+  private context: vscode.ExtensionContext;
 
   constructor(
+    context: vscode.ExtensionContext,
     workingFolder = vscode.workspace.workspaceFolders![0].uri.fsPath
   ) {
+    this.context = context;
     this.workingFolder = workingFolder;
   }
 
@@ -50,10 +53,12 @@ export class Ruby {
     return this._error;
   }
 
-  async activateRuby() {
-    this.versionManager = vscode.workspace
+  async activateRuby(
+    versionManager: VersionManager = vscode.workspace
       .getConfiguration("rubyLsp")
-      .get("rubyVersionManager")!;
+      .get("rubyVersionManager")!
+  ) {
+    this.versionManager = versionManager;
 
     // If the version manager is auto, discover the actual manager before trying to activate anything
     if (this.versionManager === VersionManager.Auto) {
@@ -75,6 +80,7 @@ export class Ruby {
           await this.activate("rvm-auto-ruby");
           break;
         case VersionManager.None:
+          await this.activate("ruby");
           break;
         default:
           await this.activateShadowenv();
@@ -87,6 +93,12 @@ export class Ruby {
       this._error = false;
     } catch (error: any) {
       this._error = true;
+
+      // When running tests, we need to throw the error or else activation may silently fail and it's very difficult to
+      // debug
+      if (this.context.extensionMode === vscode.ExtensionMode.Test) {
+        throw error;
+      }
 
       await vscode.window.showErrorMessage(
         `Failed to activate ${this.versionManager} environment: ${error.message}`
@@ -125,7 +137,7 @@ export class Ruby {
 
   private async activate(ruby: string) {
     const result = await asyncExec(
-      `${this.shell} -lic '${ruby} --disable-gems -rjson -e "printf(%{RUBY_ENV_ACTIVATE%sRUBY_ENV_ACTIVATE}, JSON.dump(ENV.to_h))"'`,
+      `${this.shell} -ic '${ruby} --disable-gems -rjson -e "printf(%{RUBY_ENV_ACTIVATE%sRUBY_ENV_ACTIVATE}, JSON.dump(ENV.to_h))"'`,
       { cwd: this.workingFolder }
     );
 
@@ -183,11 +195,29 @@ export class Ruby {
     // Use our custom Gemfile to allow RuboCop and extensions to work without having to add ruby-lsp to the bundle. Note
     // that we can't do this for the ruby-lsp repository itself otherwise the gem is activated twice
     if (path.basename(this.workingFolder) !== "ruby-lsp") {
-      this._env.BUNDLE_GEMFILE = path.join(
-        this.workingFolder,
-        ".ruby-lsp",
-        "Gemfile"
-      );
+      const customBundleGemfile: string = vscode.workspace
+        .getConfiguration("rubyLsp")
+        .get("bundleGemfile")!;
+
+      if (customBundleGemfile.length === 0) {
+        this._env.BUNDLE_GEMFILE = path.join(
+          this.workingFolder,
+          ".ruby-lsp",
+          "Gemfile"
+        );
+      } else {
+        const absoluteBundlePath = path.resolve(
+          path.join(this.workingFolder, customBundleGemfile)
+        );
+
+        if (!fs.existsSync(absoluteBundlePath)) {
+          throw new Error(
+            `The configured bundle gemfile ${absoluteBundlePath} does not exist`
+          );
+        }
+
+        this._env.BUNDLE_GEMFILE = absoluteBundlePath;
+      }
 
       // We must use the default system path for bundler in case someone has BUNDLE_PATH configured. Otherwise, we end
       // up with all gems installed inside of the `.ruby-lsp` folder, which may lead to all sorts of errors

@@ -30,6 +30,11 @@ export default class Client implements ClientInterface {
   private telemetry: Telemetry;
   private statusItems: StatusItems;
   private outputChannel = vscode.window.createOutputChannel(LSP_NAME);
+  private bundleInstallCancellationSource:
+    | vscode.CancellationTokenSource
+    | undefined;
+
+  private terminal: vscode.Terminal | undefined;
   #context: vscode.ExtensionContext;
   #ruby: Ruby;
   #state: ServerState = ServerState.Starting;
@@ -46,6 +51,9 @@ export default class Client implements ClientInterface {
     this.statusItems = new StatusItems(this);
     this.registerCommands();
     this.registerAutoRestarts();
+    vscode.window.onDidCloseTerminal((terminal: vscode.Terminal): void => {
+      if (terminal === this.terminal) this.terminal = undefined;
+    });
   }
 
   async start() {
@@ -57,7 +65,15 @@ export default class Client implements ClientInterface {
     this.state = ServerState.Starting;
 
     try {
-      await this.setupCustomGemfile();
+      // When using a custom bundle path that is not our default, then we shouldn't create the .ruby-lsp folder or try to
+      // install gems
+      const customBundleGemfile: string = vscode.workspace
+        .getConfiguration("rubyLsp")
+        .get("bundleGemfile")!;
+
+      if (customBundleGemfile.length === 0) {
+        await this.setupCustomGemfile();
+      }
     } catch (error: any) {
       this.state = ServerState.Error;
 
@@ -186,7 +202,16 @@ export default class Client implements ClientInterface {
   }
 
   async restart() {
+    // If the server is already starting/restarting we should try to do it again. One scenario where that may happen is
+    // when doing git pull, which may trigger a restart for two watchers: .rubocop.yml and Gemfile.lock. In those cases,
+    // we only want to restart once and not twice to avoid leading to a duplicate process
+    if (this.state === ServerState.Starting) {
+      return;
+    }
+
     try {
+      this.state = ServerState.Starting;
+
       if (this.client?.isRunning()) {
         await this.stop();
         await this.start();
@@ -235,8 +260,18 @@ export default class Client implements ClientInterface {
       vscode.commands.registerCommand(
         Command.Update,
         this.updateServer.bind(this)
-      )
+      ),
+      vscode.commands.registerCommand(Command.RunTest, this.runTest.bind(this))
     );
+  }
+
+  private runTest(_path: string, _name: string, command: string) {
+    if (this.terminal === undefined) {
+      this.terminal = vscode.window.createTerminal({ name: "Run test" });
+    }
+
+    this.terminal.show();
+    this.terminal.sendText(command);
   }
 
   private async setupCustomGemfile() {
@@ -267,6 +302,8 @@ export default class Client implements ClientInterface {
 
     const gemEntry =
       'gem "ruby-lsp", require: false, group: :development, source: "https://rubygems.org"';
+    const debugEntry =
+      'gem "debug", require: false, group: :development, platforms: :mri, source: "https://rubygems.org"';
 
     // Only try to evaluate the top level Gemfile if there is one. Otherwise, we'll just create our own Gemfile
     if (fs.existsSync(path.join(this.workingFolder, "Gemfile"))) {
@@ -274,16 +311,22 @@ export default class Client implements ClientInterface {
       gemfile.push('eval_gemfile(File.expand_path("../Gemfile", __dir__))');
 
       // If the `ruby-lsp` exists in the bundle, add it to the custom Gemfile commented out
-      if (await this.rubyLspIsInBundle()) {
+      if (await this.projectHasDependency("ruby-lsp")) {
         // If it is already in the bundle, add the gem commented out to avoid conflicts
         gemfile.push(`# ${gemEntry}`);
       } else {
         // If it's not a part of the bundle, add it to the custom Gemfile
         gemfile.push(gemEntry);
       }
+
+      // If debug is not in the bundle, add it to allow debugging
+      if (!(await this.projectHasDependency("debug"))) {
+        gemfile.push(debugEntry);
+      }
     } else {
-      // If no Gemfile exists, add the `ruby-lsp` gem to the custom Gemfile
+      // If no Gemfile exists, add the `ruby-lsp` and `debug` to the custom Gemfile
       gemfile.push(gemEntry);
+      gemfile.push(debugEntry);
     }
 
     // Add an empty line at the end of the file
@@ -351,19 +394,15 @@ export default class Client implements ClientInterface {
     return Object.keys(features).filter((key) => features[key]);
   }
 
-  private async rubyLspIsInBundle(): Promise<boolean> {
-    // When working on the Ruby LSP itself, it's always included in the bundle
-    if (path.basename(this.workingFolder) === "ruby-lsp") {
-      return true;
-    }
-
+  private async projectHasDependency(gemName: string): Promise<boolean> {
     try {
-      // If bundle show succeeds, it means the ruby-lsp gem is a part of the bundle
+      // exit with an error if gemName not a dependency or is a transitive dependency.
+      // exit with success if gemName is a direct dependency.
       await asyncExec(
         `BUNDLE_GEMFILE=${path.join(
           this.workingFolder,
           "Gemfile"
-        )} bundle show ruby-lsp`,
+        )} bundle exec ruby -e "exit 1 unless Bundler.locked_gems.dependencies.key?('${gemName}')"`,
         {
           cwd: this.workingFolder,
           env: this.ruby.env,
@@ -435,8 +474,25 @@ export default class Client implements ClientInterface {
         title: "Setting up the bundle",
         cancellable: true,
       },
-      (progress, token) =>
-        this.bundleInstall(customGemfilePath, { progress, token })
+      (progress, token) => {
+        if (this.bundleInstallCancellationSource) {
+          this.bundleInstallCancellationSource.cancel();
+          this.bundleInstallCancellationSource.dispose();
+        }
+
+        this.bundleInstallCancellationSource =
+          new vscode.CancellationTokenSource();
+
+        token.onCancellationRequested(() => {
+          this.bundleInstallCancellationSource!.cancel();
+          this.bundleInstallCancellationSource!.dispose();
+        });
+
+        return this.bundleInstall(customGemfilePath, {
+          progress,
+          token: this.bundleInstallCancellationSource.token,
+        });
+      }
     );
 
     // Update the last time we checked for updates
