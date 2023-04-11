@@ -21,6 +21,7 @@ suite("StatusItems", () => {
   let context: vscode.ExtensionContext;
   let status: StatusItem;
   let client: ClientInterface;
+  let formatter: string;
 
   beforeEach(() => {
     context = { subscriptions: [] } as unknown as vscode.ExtensionContext;
@@ -39,6 +40,7 @@ suite("StatusItems", () => {
       client = {
         context,
         ruby,
+        formatter,
         state: ServerState.Running,
       };
       status = new RubyVersionStatus(client);

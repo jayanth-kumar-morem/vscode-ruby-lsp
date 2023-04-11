@@ -37,6 +37,7 @@ const STARTED_SERVER_OPTIONS = [
 export interface ClientInterface {
   context: vscode.ExtensionContext;
   ruby: Ruby;
+  formatter?: string;
   state: ServerState;
 }
 
@@ -353,7 +354,7 @@ export class FormatterStatus extends StatusItem {
     //   .getConfiguration("rubyLsp")
     //   .get("yjit");
 
-    this.item.text = "No formatter found";
+    this.item.text = this.client.formatter || "missing";
 
     this.item.command = {
       title: "Help",

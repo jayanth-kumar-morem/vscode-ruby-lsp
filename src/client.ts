@@ -38,6 +38,7 @@ export default class Client implements ClientInterface {
   #context: vscode.ExtensionContext;
   #ruby: Ruby;
   #state: ServerState = ServerState.Starting;
+  #formatter: string;
 
   constructor(
     context: vscode.ExtensionContext,
@@ -48,6 +49,7 @@ export default class Client implements ClientInterface {
     this.telemetry = telemetry;
     this.#context = context;
     this.#ruby = ruby;
+    this.#formatter = "";
     this.statusItems = new StatusItems(this);
     this.registerCommands();
     this.registerAutoRestarts();
@@ -117,6 +119,31 @@ export default class Client implements ClientInterface {
         formatter: configuration.get("formatter"),
       },
       middleware: {
+        provideDocumentFormattingEdits: async (
+          document,
+          _options,
+          token,
+          _next
+        ) => {
+          this.formatter = "Syntax Tree";
+          this.statusItems.refresh();
+          if (this.client) {
+            const response: vscode.TextEdit[] | null =
+              await this.client.sendRequest(
+                "textDocument/formatting",
+                {
+                  textDocument: { uri: document.uri.toString() },
+                },
+                token
+              );
+
+            if (!response) {
+              return null;
+            }
+          }
+
+          return null;
+        },
         provideOnTypeFormattingEdits: async (
           document,
           position,
@@ -233,6 +260,14 @@ export default class Client implements ClientInterface {
 
   private set ruby(ruby: Ruby) {
     this.#ruby = ruby;
+  }
+
+  get formatter(): string {
+    return this.#formatter;
+  }
+
+  private set formatter(name: string) {
+    this.#formatter = name;
   }
 
   get context(): vscode.ExtensionContext {
