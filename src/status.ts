@@ -37,8 +37,8 @@ const STARTED_SERVER_OPTIONS = [
 export interface ClientInterface {
   context: vscode.ExtensionContext;
   ruby: Ruby;
-  formatter?: string;
   state: ServerState;
+  formatter: string;
 }
 
 export abstract class StatusItem {
@@ -346,27 +346,24 @@ export class FormatterStatus extends StatusItem {
     super("formatter", client);
 
     this.item.name = "Formatter";
-    this.refresh();
-  }
-
-  refresh(): void {
-    // const useYjit: boolean | undefined = vscode.workspace
-    //   .getConfiguration("rubyLsp")
-    //   .get("yjit");
-
-    this.item.text = this.client.formatter || "missing";
-
     this.item.command = {
       title: "Help",
       command: Command.FormatterHelp,
     };
+    this.refresh();
+  }
+
+  refresh(): void {
+    this.item.text = `Using formatter: ${this.client.formatter}`;
   }
 
   registerCommand(): void {
     this.context.subscriptions.push(
       vscode.commands.registerCommand(Command.FormatterHelp, () => {
         vscode.env.openExternal(
-          vscode.Uri.parse("https://github.com/Shopify/ruby-lsp#formatting")
+          vscode.Uri.parse(
+            "https://github.com/Shopify/vscode-ruby-lsp#formatting"
+          )
         );
       })
     );

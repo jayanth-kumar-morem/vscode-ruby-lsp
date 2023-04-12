@@ -40,8 +40,8 @@ suite("StatusItems", () => {
       client = {
         context,
         ruby,
-        formatter,
         state: ServerState.Running,
+        formatter: "none",
       };
       status = new RubyVersionStatus(client);
     });
@@ -69,7 +69,7 @@ suite("StatusItems", () => {
   suite("ServerStatus", () => {
     beforeEach(() => {
       ruby = {} as Ruby;
-      client = { context, ruby, state: ServerState.Running };
+      client = { context, ruby, state: ServerState.Running, formatter: "none" };
       status = new ServerStatus(client);
     });
 
@@ -132,6 +132,7 @@ suite("StatusItems", () => {
       client = {
         context,
         ruby,
+        formatter,
         state: ServerState.Running,
       };
       status = new ExperimentalFeaturesStatus(client);
@@ -152,7 +153,7 @@ suite("StatusItems", () => {
   suite("YjitStatus when Ruby supports it", () => {
     beforeEach(() => {
       ruby = { supportsYjit: true } as Ruby;
-      client = { context, ruby, state: ServerState.Running };
+      client = { context, ruby, state: ServerState.Running, formatter: "none" };
       status = new YjitStatus(client);
     });
 
@@ -176,7 +177,7 @@ suite("StatusItems", () => {
   suite("YjitStatus when Ruby does not support it", () => {
     beforeEach(() => {
       ruby = { supportsYjit: false } as Ruby;
-      client = { context, ruby, state: ServerState.Running };
+      client = { context, ruby, state: ServerState.Running, formatter: "none" };
       status = new YjitStatus(client);
     });
 
@@ -208,6 +209,7 @@ suite("StatusItems", () => {
       status = new FeaturesStatus({
         context,
         ruby,
+        formatter,
         state: ServerState.Running,
       });
     });
